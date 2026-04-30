@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Immersive Would You Rather</title>
+<style>
+*{box-sizing:border-box}
+body,html{margin:0;padding:0;overflow:hidden;background:#02030a;color:white;font-family:system-ui,Segoe UI}
+#canvas{position:absolute;top:0;left:0;z-index:0}
+
+.overlay{position:absolute;width:100%;height:100%;display:flex;z-index:2}
+.option{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px;cursor:pointer;position:relative}
+
+.left{background:radial-gradient(circle at center, rgba(0,120,255,0.25), transparent 70%)}
+.right{background:radial-gradient(circle at center, rgba(255,80,0,0.25), transparent 70%)}
+
+.text{font-size:30px;font-weight:600;max-width:420px;line-height:1.4;text-shadow:0 0 20px rgba(0,0,0,1)}
+.sub{font-size:14px;opacity:0.7;margin-top:10px}
+
+.world{
+ position:absolute;width:100%;height:100%;z-index:1;pointer-events:none;
+ background:radial-gradient(circle at 30% 40%, rgba(0,150,255,0.1), transparent 60%),
+ radial-gradient(circle at 70% 60%, rgba(255,100,0,0.1), transparent 60%);
+ animation:moveBg 10s linear infinite;
+}
+@keyframes moveBg{
+ 0%{transform:scale(1)}
+ 50%{transform:scale(1.1)}
+ 100%{transform:scale(1)}
+}
+
+.fade{animation:fadeOut 0.8s forwards}
+@keyframes fadeOut{to{opacity:0;transform:scale(1.1)}}
+</style>
+</head>
+<body>
+<div class="world"></div>
+<canvas id="canvas"></canvas>
+<div class="overlay">
+ <div class="option left" id="left"><div><div class="text"></div><div class="sub"></div></div></div>
+ <div class="option right" id="right"><div><div class="text"></div><div class="sub"></div></div></div>
+</div>
+
+<script>
+const canvas=document.getElementById('canvas');
+const ctx=canvas.getContext('2d');
+canvas.width=innerWidth;canvas.height=innerHeight;
+
+let particles=[];
+let mouse={x:innerWidth/2,y:innerHeight/2};
+
+for(let i=0;i<1500;i++){
+ particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:0,vy:0,color:Math.random()>0.5?"#4da6ff":"#ff6a3d"});
+}
+
+window.onmousemove=e=>{mouse.x=e.clientX;mouse.y=e.clientY};
+
+function animate(){
+ ctx.fillStyle="rgba(2,3,10,0.25)";
+ ctx.fillRect(0,0,canvas.width,canvas.height);
+
+ particles.forEach(p=>{
+  let dx=mouse.x-p.x;
+  let dy=mouse.y-p.y;
+
+let angle=Math.atan2(dy,dx);
+let dist=Math.sqrt(dx*dx+dy*dy);
+
+// always attract (smooth)
+let force = Math.min(0.4, 100/dist);
+
+p.vx += Math.cos(angle) * force;
+p.vy += Math.sin(angle) * force;
+
+  p.x+=p.vx; p.y+=p.vy;
+  p.vx*=0.92; p.vy*=0.92;
+
+ctx.beginPath();
+
+// glow
+ctx.shadowBlur = 10;
+ctx.shadowColor = p.color;
+
+// main particle
+ctx.fillStyle = p.color;
+ctx.arc(p.x, p.y, 1.2, 0, Math.PI * 2);
+ctx.fill();
+
+// reset glow (IMPORTANT)
+ctx.shadowBlur = 0;
+});
+requestAnimationFrame(animate);
+}
+
+animate();
+
+// AUDIO
+const audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+function playClick(){
+ const o=audioCtx.createOscillator();
+ const g=audioCtx.createGain();
+ o.frequency.value=100; g.gain.value=0.2;
+ o.connect(g); g.connect(audioCtx.destination);
+ o.start(); o.stop(audioCtx.currentTime+0.15);
+}
+function playBurst(){
+ const o=audioCtx.createOscillator();
+ const g=audioCtx.createGain();
+ o.frequency.setValueAtTime(200,audioCtx.currentTime);
+ o.frequency.exponentialRampToValueAtTime(30,audioCtx.currentTime+0.4);
+ g.gain.value=0.3;
+ o.connect(g); g.connect(audioCtx.destination);
+ o.start(); o.stop(audioCtx.currentTime+0.4);
+}
+
+const questions = [
+["You wake up and no one remembers you ever existed","You wake up and you remember no one at all","Who are you without memory?"],
+
+["Everyone admires you but no one truly knows you","One person understands you but the world ignores you","Fame vs Connection"],
+
+["You can control your dreams forever","You must face reality exactly as it is","Escape vs Truth"],
+
+["You can stop time whenever you want","You can rewind time but never pause it","Stillness vs Repetition"],
+
+["You can explore the entire universe alone","You can live one life with someone who truly loves you","Infinity vs Intimacy"],
+
+["You relive your happiest moment forever","You keep moving forward never looking back","Comfort vs Growth"],
+
+["You become powerful but feel nothing","You stay human and feel everything deeply","Power vs Humanity"],
+
+["You can enter people’s dreams","You can shape the real world","Fantasy vs Control"],
+
+["You live in the deep ocean surrounded by glowing life","You drift among silent stars forever","Depth vs Vastness"],
+
+["You always know the truth no matter how painful","You believe a beautiful lie forever","Reality vs Peace"]
+];
+
+let index=0;
+const leftText=document.querySelector('#left .text');
+const rightText=document.querySelector('#right .text');
+const leftSub=document.querySelector('#left .sub');
+const rightSub=document.querySelector('#right .sub');
+
+function loadQ(){
+ leftText.innerText=questions[index][0];
+ rightText.innerText=questions[index][1];
+ leftSub.innerText=questions[index][2];
+ rightSub.innerText=questions[index][2];
+}
+loadQ();
+
+function choose(){
+ playClick();
+
+ setTimeout(()=>{
+  particles.forEach(p=>{
+   p.vx=(Math.random()-0.5)*30;
+   p.vy=(Math.random()-0.5)*30;
+  });
+  playBurst();
+
+  document.querySelectorAll('.option').forEach(o=>o.classList.add('fade'));
+
+  setTimeout(()=>{
+   index=(index+1)%questions.length;
+   document.querySelectorAll('.option').forEach(o=>o.classList.remove('fade'));
+   loadQ();
+  },800);
+ },200);
+}
+
+document.getElementById('left').onclick=choose;
+document.getElementById('right').onclick=choose;
+</script>
+</body>
+</html>
