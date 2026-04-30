@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The Astrologer's Hut</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&family=Noto+Sans+Devanagari:wght@300;400;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;min-height:100vh;overflow:hidden;font-family:'Crimson Text',serif;cursor:none;}
+#cur{position:fixed;width:14px;height:14px;border-radius:50%;background:rgba(255,200,80,.75);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);box-shadow:0 0 10px rgba(255,200,80,.5);}
+#bg{position:fixed;inset:0;z-index:0;transition:background 2.5s ease;
+  background:linear-gradient(180deg,#080318 0%,#150830 12%,#280e55 24%,#451870 35%,#702850 48%,#b54535 62%,#e07530 74%,#f5a028 84%,#fdd060 92%,#fff0a0 100%);}
+.bokeh{position:fixed;border-radius:50%;filter:blur(55px);pointer-events:none;z-index:1;animation:drft linear infinite;}
+@keyframes drft{0%{transform:translateY(0) translateX(0)}33%{transform:translateY(-28px) translateX(14px)}66%{transform:translateY(10px) translateX(-10px)}100%{transform:translateY(0) translateX(0)}}
+.star{position:fixed;border-radius:50%;background:#fff;pointer-events:none;z-index:1;animation:twkl linear infinite;}
+@keyframes twkl{0%,100%{opacity:.15;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+.ptcl{position:fixed;pointer-events:none;z-index:3;animation:pflt linear infinite;}
+@keyframes pflt{0%{transform:translateY(0) rotate(0deg);opacity:0}10%{opacity:.8}90%{opacity:.3}100%{transform:translateY(-100vh) rotate(360deg);opacity:0}}
+#moon{position:fixed;top:5%;right:10%;width:85px;height:85px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#fffad0,#f5d060 40%,#e8a820 80%,#c07010 100%);
+  box-shadow:0 0 40px rgba(255,220,80,.65),0 0 90px rgba(255,180,40,.3);z-index:2;animation:mglow 4s ease-in-out infinite;}
+@keyframes mglow{0%,100%{box-shadow:0 0 40px rgba(255,220,80,.65),0 0 90px rgba(255,180,40,.3)}50%{box-shadow:0 0 65px rgba(255,220,80,.95),0 0 130px rgba(255,180,40,.5)}}
+
+.screen{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;opacity:0;pointer-events:none;transition:opacity .9s ease;}
+.screen.on{opacity:1;pointer-events:all;}
+
+/* ── HUT SCENE ── */
+#s-hut{justify-content:flex-end;}
+.ground{position:absolute;bottom:0;left:0;right:0;height:28%;background:linear-gradient(to bottom,#4a2808 0%,#3a1e04 40%,#2a1402 100%);z-index:4;}
+.ground::before{content:'';position:absolute;top:0;left:0;right:0;height:8px;background:linear-gradient(90deg,#6a3810,#8a5020,#6a3810,#5a2808,#7a4018);}
+.tree{position:absolute;bottom:26%;z-index:4;}
+.hut{position:absolute;bottom:27%;left:50%;transform:translateX(-50%);width:min(500px,90vw);z-index:5;display:flex;flex-direction:column;align-items:center;}
+.hut-roof{width:110%;position:relative;filter:drop-shadow(0 -4px 20px rgba(255,150,50,.3));}
+.hut-walls{width:82%;background:linear-gradient(180deg,#8b4513 0%,#6b3010 50%,#5a2808 100%);height:clamp(180px,28vw,240px);position:relative;border-left:6px solid #3a1804;border-right:6px solid #3a1804;box-shadow:inset -20px 0 40px rgba(0,0,0,.4),inset 20px 0 20px rgba(255,150,50,.08);}
+.hut-door{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:38%;height:75%;background:linear-gradient(180deg,#1a0a02 0%,#0a0500 100%);border-radius:50% 50% 0 0/30% 30% 0 0;border:3px solid #5a3010;border-bottom:none;box-shadow:0 0 30px rgba(255,180,80,.4),inset 0 0 20px rgba(255,150,50,.15);overflow:hidden;}
+.door-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 80%,rgba(255,160,50,.45) 0%,transparent 70%);animation:dflkr 3s ease-in-out infinite;}
+@keyframes dflkr{0%,100%{opacity:.8}50%{opacity:1}}
+.hut-win{position:absolute;top:20%;width:18%;height:28%;background:rgba(255,150,40,.15);border:3px solid #5a3010;border-radius:4px;box-shadow:0 0 20px rgba(255,150,50,.5),inset 0 0 10px rgba(255,180,80,.2);}
+.hut-win::before{content:'';position:absolute;top:50%;left:0;right:0;height:2px;background:#5a3010;}
+.hut-win::after{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;background:#5a3010;}
+.hut-win.L{left:8%;}.hut-win.R{right:8%;}
+.hanging{position:absolute;top:-10px;display:flex;gap:8px;z-index:7;}
+.hi{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.hs{width:1px;height:20px;background:#8b6040;}
+.ho{font-size:clamp(14px,2.5vw,20px);filter:drop-shadow(0 0 6px rgba(255,200,80,.6));animation:hsway 3s ease-in-out infinite;}
+@keyframes hsway{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+.chimney{position:absolute;top:-20px;right:15%;width:30px;height:40px;background:#3a1804;border-radius:2px;}
+.spuff{position:absolute;top:-10px;left:50%;transform:translateX(-50%);border-radius:50%;background:rgba(200,180,160,.28);animation:smkup 3s ease-out infinite;}
+.spuff:nth-child(1){width:20px;height:20px;}
+.spuff:nth-child(2){width:28px;height:28px;animation-delay:1s;}
+.spuff:nth-child(3){width:36px;height:36px;animation-delay:2s;}
+@keyframes smkup{0%{opacity:.55;transform:translateX(-50%) translateY(0) scale(.5)}100%{opacity:0;transform:translateX(-50%) translateY(-60px) scale(2)}}
+.astrologer{position:absolute;bottom:0;left:50%;transform:translateX(-50%);z-index:6;width:clamp(100px,18vw,150px);}
+.ast-svg{width:100%;height:auto;filter:drop-shadow(0 0 20px rgba(255,180,80,.4));}
+.hut-title{position:absolute;top:4%;left:50%;transform:translateX(-50%);text-align:center;z-index:8;white-space:nowrap;}
+.ht-san{font-family:'Noto Sans Devanagari',sans-serif;font-size:clamp(13px,2.5vw,20px);color:rgba(255,220,100,.8);letter-spacing:3px;margin-bottom:3px;text-shadow:0 0 20px rgba(255,200,50,.5);}
+.ht-main{font-family:'Cinzel',serif;font-size:clamp(20px,4.5vw,40px);font-weight:700;color:#fdd878;letter-spacing:4px;text-shadow:0 0 30px rgba(255,220,80,.6),0 0 60px rgba(255,160,40,.3);animation:tglow 3s ease-in-out infinite;}
+@keyframes tglow{0%,100%{text-shadow:0 0 30px rgba(255,220,80,.6),0 0 60px rgba(255,160,40,.3)}50%{text-shadow:0 0 55px rgba(255,220,80,.95),0 0 110px rgba(255,160,40,.5)}}
+.ht-sub{font-size:clamp(11px,1.8vw,15px);color:rgba(255,200,120,.55);letter-spacing:2px;font-style:italic;margin-top:3px;}
+.ht-accuracy{font-size:clamp(9px,1.3vw,11px);color:rgba(255,200,120,.35);letter-spacing:1px;margin-top:5px;font-style:italic;}
+
+.enter-hut-btn{position:absolute;bottom:32%;left:50%;transform:translateX(-50%);font-family:'Cinzel',serif;font-size:clamp(11px,2vw,15px);font-weight:600;letter-spacing:4px;color:#1a0a00;background:linear-gradient(135deg,#fdd878,#f5a830,#e8803a);border:none;padding:16px 40px;cursor:pointer;border-radius:4px;box-shadow:0 0 30px rgba(255,200,80,.6),0 0 60px rgba(255,160,40,.3);animation:bpulse 2s ease-in-out infinite;transition:transform .2s,box-shadow .2s;white-space:nowrap;z-index:9;}
+.enter-hut-btn:hover{transform:translateX(-50%) scale(1.05);box-shadow:0 0 55px rgba(255,200,80,.95),0 0 110px rgba(255,160,40,.5);}
+@keyframes bpulse{0%,100%{box-shadow:0 0 30px rgba(255,200,80,.6),0 0 60px rgba(255,160,40,.3)}50%{box-shadow:0 0 55px rgba(255,200,80,.95),0 0 90px rgba(255,160,40,.5)}}
+
+/* ── FORM ── */
+#s-form{background:rgba(8,3,18,.88);backdrop-filter:blur(5px);justify-content:center;flex-direction:column;align-items:center;z-index:20;}
+.form-card{background:linear-gradient(160deg,rgba(38,14,4,.97),rgba(18,7,1,.99));border:1px solid rgba(255,180,60,.22);border-radius:16px;padding:28px 24px;width:min(460px,94vw);box-shadow:0 0 60px rgba(255,150,40,.14),inset 0 0 40px rgba(255,120,30,.04);position:relative;overflow:hidden;max-height:92vh;overflow-y:auto;}
+.form-card::-webkit-scrollbar{width:0;}
+.form-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#fdd878,#f5a830,#fdd878,transparent);}
+.form-mandala{text-align:center;font-size:32px;margin-bottom:6px;animation:spinslow 20s linear infinite;}
+@keyframes spinslow{to{transform:rotate(360deg)}}
+.form-title{font-family:'Cinzel',serif;font-size:clamp(16px,3.5vw,24px);font-weight:700;text-align:center;color:#fdd878;letter-spacing:3px;margin-bottom:3px;text-shadow:0 0 20px rgba(255,220,80,.4);}
+.form-sub{text-align:center;font-size:12px;color:rgba(255,180,80,.5);letter-spacing:2px;font-style:italic;margin-bottom:4px;}
+.form-accuracy{text-align:center;font-size:10px;color:rgba(255,180,80,.3);letter-spacing:1px;font-style:italic;margin-bottom:22px;}
+
+.fg{margin-bottom:14px;}
+.fl{font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:rgba(255,180,80,.65);text-transform:uppercase;margin-bottom:7px;display:block;}
+.fi{width:100%;background:rgba(255,255,255,.055);border:1px solid rgba(255,180,60,.18);border-radius:8px;padding:11px 15px;font-family:'Crimson Text',serif;font-size:16px;color:#fdd878;outline:none;transition:border-color .3s,box-shadow .3s;letter-spacing:.5px;}
+.fi::placeholder{color:rgba(255,180,80,.28);}
+.fi:focus{border-color:rgba(255,200,80,.55);box-shadow:0 0 18px rgba(255,180,60,.13);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.dsel{width:100%;background:rgba(255,255,255,.055);border:1px solid rgba(255,180,60,.18);border-radius:8px;padding:11px 8px;font-family:'Crimson Text',serif;font-size:14px;color:#fdd878;outline:none;cursor:pointer;transition:border-color .3s;-webkit-appearance:none;text-align:center;}
+.dsel:focus{border-color:rgba(255,200,80,.55);}
+.dsel option{background:#1a0a02;color:#fdd878;}
+.grow{display:flex;gap:8px;}
+.gbtn{flex:1;background:rgba(255,255,255,.045);border:1px solid rgba(255,180,60,.18);border-radius:8px;padding:9px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;color:rgba(255,180,80,.55);cursor:pointer;transition:all .3s;text-align:center;}
+.gbtn.sel,.gbtn:hover{background:rgba(255,180,60,.14);border-color:rgba(255,200,80,.48);color:#fdd878;}
+.reveal-btn{width:100%;margin-top:10px;font-family:'Cinzel',serif;font-size:13px;font-weight:700;letter-spacing:4px;color:#1a0a00;background:linear-gradient(135deg,#fdd878,#f5a830,#e8803a);border:none;padding:15px;border-radius:8px;cursor:pointer;box-shadow:0 0 30px rgba(255,200,80,.38);transition:transform .2s,box-shadow .2s;}
+.reveal-btn:hover{transform:scale(1.02);box-shadow:0 0 50px rgba(255,200,80,.7);}
+.err{color:rgba(255,100,80,.8);font-size:12px;text-align:center;margin-top:8px;font-style:italic;min-height:18px;}
+
+/* ── READING ── */
+#s-reading{background:rgba(8,3,18,.93);backdrop-filter:blur(6px);z-index:20;flex-direction:column;justify-content:flex-start;overflow-y:auto;padding:20px 14px 40px;}
+.reading-inner{width:min(580px,96vw);margin:0 auto;display:flex;flex-direction:column;gap:0;}
+.ast-speech{display:flex;gap:14px;align-items:flex-start;margin-bottom:20px;}
+.ast-face{width:52px;height:52px;border-radius:50%;flex-shrink:0;background:radial-gradient(circle at 40% 35%,#f5c87a,#d4843a 60%,#a05020 100%);border:2px solid rgba(255,200,80,.4);box-shadow:0 0 20px rgba(255,180,60,.3);display:flex;align-items:center;justify-content:center;font-size:24px;}
+.ast-bubble{flex:1;background:rgba(38,14,4,.92);border:1px solid rgba(255,180,60,.18);border-left:3px solid #f5a830;border-radius:0 12px 12px 12px;padding:14px 16px;font-size:clamp(13px,2vw,15px);color:rgba(255,220,160,.9);line-height:1.75;font-style:italic;}
+.ast-nametag{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:#f5a830;margin-bottom:5px;font-style:normal;}
+.res-hdr{text-align:center;margin-bottom:22px;}
+.rashi-sym{font-size:68px;margin-bottom:6px;animation:rspin 6s ease-in-out infinite;display:block;}
+@keyframes rspin{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.06) rotate(3deg)}}
+.rashi-name{font-family:'Cinzel',serif;font-size:clamp(24px,5vw,38px);font-weight:700;color:#fdd878;letter-spacing:4px;text-shadow:0 0 30px rgba(255,220,80,.5);}
+.rashi-san{font-family:'Noto Sans Devanagari',sans-serif;font-size:clamp(14px,2.5vw,20px);color:rgba(255,200,100,.6);letter-spacing:2px;margin-top:3px;}
+.rashi-meta{font-size:12px;color:rgba(255,180,80,.45);letter-spacing:2px;margin-top:5px;font-style:italic;}
+
+/* two-column badge showing both signs */
+.signs-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+.sign-badge{background:linear-gradient(160deg,rgba(50,20,5,.9),rgba(28,10,2,.95));border:1px solid rgba(255,180,60,.15);border-radius:12px;padding:14px;text-align:center;}
+.sb-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:rgba(255,180,80,.45);text-transform:uppercase;margin-bottom:6px;}
+.sb-sym{font-size:30px;margin-bottom:4px;display:block;}
+.sb-name{font-size:clamp(13px,2.2vw,16px);color:#fdd878;font-weight:600;}
+.sb-san{font-family:'Noto Sans Devanagari',sans-serif;font-size:11px;color:rgba(255,200,100,.5);margin-top:2px;}
+
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+.ic{background:linear-gradient(160deg,rgba(50,20,5,.9),rgba(28,10,2,.95));border:1px solid rgba(255,180,60,.14);border-radius:12px;padding:12px 14px;text-align:center;}
+.ic-ico{font-size:22px;margin-bottom:5px;display:block;}
+.ic-lbl{font-family:'Cinzel',serif;font-size:8px;letter-spacing:3px;color:rgba(255,180,80,.45);text-transform:uppercase;margin-bottom:3px;}
+.ic-val{font-size:clamp(13px,2.2vw,16px);color:#fdd878;font-weight:600;letter-spacing:.5px;}
+.ic-sub{font-size:10px;color:rgba(255,180,80,.4);margin-top:2px;font-style:italic;}
+
+.sec-title{font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;color:rgba(255,180,80,.55);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:10px;}
+.sec-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,180,60,.3),transparent);}
+.traits-wrap{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;}
+.tpill{background:rgba(255,180,60,.09);border:1px solid rgba(255,180,60,.18);border-radius:20px;padding:5px 13px;font-size:12px;color:rgba(255,200,120,.82);letter-spacing:.5px;}
+
+.num-card{border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;}
+.num-big{font-family:'Cinzel',serif;font-size:52px;font-weight:700;line-height:1;text-shadow:0 0 30px currentColor;}
+.num-lbl{font-family:'Cinzel',serif;font-size:10px;letter-spacing:4px;margin-top:3px;}
+.num-mean{font-size:13px;margin-top:7px;font-style:italic;line-height:1.6;}
+
+.pred-card{background:linear-gradient(160deg,rgba(28,48,8,.75),rgba(8,28,4,.92));border:1px solid rgba(100,200,80,.18);border-radius:12px;padding:18px;margin-bottom:16px;}
+.pred-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:4px;color:rgba(100,200,80,.65);margin-bottom:8px;}
+.pred-txt{font-size:clamp(13px,2vw,15px);color:rgba(180,240,160,.8);line-height:1.82;font-style:italic;}
+
+.compat-wrap{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;}
+.cpill{display:flex;align-items:center;gap:6px;background:rgba(255,150,50,.09);border:1px solid rgba(255,150,50,.18);border-radius:20px;padding:5px 13px;}
+.cp-sym{font-size:17px;}.cp-name{font-size:12px;color:rgba(255,180,80,.8);}
+
+.again-btn{width:100%;font-family:'Cinzel',serif;font-size:13px;font-weight:600;letter-spacing:4px;color:#1a0a00;background:linear-gradient(135deg,#fdd878,#f5a830);border:none;padding:15px;border-radius:8px;cursor:pointer;box-shadow:0 0 30px rgba(255,200,80,.28);transition:transform .2s;margin-top:6px;}
+.again-btn:hover{transform:scale(1.02);}
+
+.accuracy-note{text-align:center;font-size:10px;color:rgba(255,180,80,.28);letter-spacing:1px;font-style:italic;margin-top:10px;}
+
+#tfade{position:fixed;inset:0;z-index:500;background:#0a0520;opacity:0;pointer-events:none;transition:opacity .7s;}
+#tfade.on{opacity:1;}
+</style>
+</head>
+<body>
+<div id="cur"></div>
+<div id="bg"></div>
+<div id="moon"></div>
+<div id="tfade"></div>
+
+<div class="bokeh" style="width:300px;height:300px;background:rgba(180,60,200,.12);top:-60px;left:-80px;animation-duration:14s;"></div>
+<div class="bokeh" style="width:260px;height:260px;background:rgba(255,120,50,.1);bottom:-60px;right:-60px;animation-duration:17s;animation-delay:-6s;"></div>
+<div class="bokeh" style="width:200px;height:200px;background:rgba(80,60,255,.09);top:40%;left:72%;animation-duration:20s;animation-delay:-9s;"></div>
+
+<script>
+// stars
+for(let i=0;i<130;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*2.5+.5;s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*70}%;left:${Math.random()*100}%;animation-duration:${2+Math.random()*4}s;animation-delay:${-Math.random()*4}s;`;document.body.appendChild(s);}
+// particles
+const pts=['✦','★','·','◆','✧'];
+for(let i=0;i<18;i++){const p=document.createElement('div');p.className='ptcl';p.textContent=pts[Math.floor(Math.random()*pts.length)];p.style.cssText=`left:${Math.random()*100}vw;top:${20+Math.random()*80}vh;font-size:${5+Math.random()*10}px;color:rgba(255,220,100,${.08+Math.random()*.28});animation-duration:${12+Math.random()*22}s;animation-delay:${-Math.random()*22}s;`;document.body.appendChild(p);}
+</script>
+
+<!-- ══ HUT SCENE ══ -->
+<div class="screen on" id="s-hut">
+  <div class="hut-title">
+    <div class="ht-san">ज्योतिष मंदिर</div>
+    <div class="ht-main">THE ASTROLOGER'S HUT</div>
+    <div class="ht-sub">Ancient Vedic Wisdom · Real Calculations</div>
+    <div class="ht-accuracy">~90% accuracy · Results based on Vedic & Western astrology</div>
+  </div>
+
+  <div class="tree" style="left:1%;bottom:26%;">
+    <svg width="90" height="160" viewBox="0 0 90 160"><rect x="38" y="100" width="14" height="60" fill="#3a2010" rx="2"/><ellipse cx="45" cy="90" rx="38" ry="55" fill="#1a5010"/><ellipse cx="45" cy="70" rx="28" ry="42" fill="#2a7020"/><ellipse cx="45" cy="52" rx="18" ry="30" fill="#3a9030"/></svg>
+  </div>
+  <div class="tree" style="right:1%;bottom:26%;">
+    <svg width="80" height="140" viewBox="0 0 80 140"><rect x="33" y="90" width="14" height="50" fill="#3a2010" rx="2"/><ellipse cx="40" cy="80" rx="34" ry="48" fill="#1a5010"/><ellipse cx="40" cy="62" rx="24" ry="36" fill="#2a7020"/><ellipse cx="40" cy="46" rx="16" ry="26" fill="#3a9030"/></svg>
+  </div>
+
+  <div id="fireflies" style="position:absolute;inset:0;z-index:6;pointer-events:none;"></div>
+
+  <div class="hut">
+    <div class="chimney" style="position:absolute;top:-50px;right:14%;z-index:8;">
+      <div class="spuff"></div><div class="spuff"></div><div class="spuff"></div>
+    </div>
+    <div class="hanging" style="top:-30px;left:50%;transform:translateX(-50%);">
+      <div class="hi"><div class="hs"></div><div class="ho" style="animation-delay:0s">🪔</div></div>
+      <div class="hi"><div class="hs"></div><div class="ho" style="animation-delay:.4s">🔮</div></div>
+      <div class="hi"><div class="hs"></div><div class="ho" style="animation-delay:.8s">⭐</div></div>
+      <div class="hi"><div class="hs"></div><div class="ho" style="animation-delay:1.2s">🪔</div></div>
+      <div class="hi"><div class="hs"></div><div class="ho" style="animation-delay:1.6s">🌙</div></div>
+    </div>
+    <div class="hut-roof">
+      <svg viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg" width="100%">
+        <path d="M250 10 L30 190 L470 190 Z" fill="#8b2500"/>
+        <path d="M250 10 L30 190 L60 190 L250 30 L440 190 L470 190 Z" fill="#a03010"/>
+        <path d="M30 190 L470 190 L460 178 L40 178 Z" fill="#c04020"/>
+        <polygon points="250,0 242,18 258,18" fill="#fdd878"/>
+        <circle cx="250" cy="6" r="8" fill="#f5a830"/><circle cx="250" cy="6" r="4" fill="#fdd878"/>
+        <path d="M40 178 Q55 165 70 178 Q85 165 100 178 Q115 165 130 178 Q145 165 160 178 Q175 165 190 178 Q205 165 220 178 Q235 165 250 178 Q265 165 280 178 Q295 165 310 178 Q325 165 340 178 Q355 165 370 178 Q385 165 400 178 Q415 165 430 178 Q445 165 460 178" fill="none" stroke="#e04030" stroke-width="4"/>
+        <line x1="40" y1="188" x2="460" y2="188" stroke="#fdd878" stroke-width="2" opacity=".5"/>
+      </svg>
+    </div>
+    <div class="hut-walls">
+      <div class="hut-win L"></div>
+      <div class="hut-win R"></div>
+      <div class="hut-door"><div class="door-glow"></div></div>
+      <div class="astrologer">
+        <svg class="ast-svg" viewBox="0 0 150 200" xmlns="http://www.w3.org/2000/svg">
+          <path d="M45 120 Q30 160 35 200 L115 200 Q120 160 105 120 Z" fill="#f5a030" opacity=".9"/>
+          <path d="M40 80 Q35 110 35 130 L115 130 Q115 110 110 80 Q90 70 75 68 Q60 70 40 80Z" fill="#fff8e8"/>
+          <path d="M40 80 Q35 110 35 130 L45 130 Q45 110 46 80Z" fill="rgba(200,100,30,.2)"/>
+          <path d="M110 80 Q115 110 115 130 L105 130 Q105 110 104 80Z" fill="rgba(200,100,30,.2)"/>
+          <path d="M62 68 Q75 78 88 68 L85 80 Q75 86 65 80Z" fill="rgba(200,100,30,.3)"/>
+          <path d="M35 90 Q20 100 18 115 Q22 120 30 116 Q32 105 40 98Z" fill="#c87840"/>
+          <path d="M115 90 Q130 100 132 115 Q128 120 120 116 Q118 105 110 98Z" fill="#c87840"/>
+          <ellipse cx="22" cy="118" rx="9" ry="7" fill="#c87840"/>
+          <ellipse cx="128" cy="118" rx="9" ry="7" fill="#c87840"/>
+          <circle cx="128" cy="112" r="10" fill="rgba(150,100,255,.4)" stroke="rgba(200,150,255,.6)" stroke-width="1.5"/>
+          <circle cx="125" cy="108" r="3" fill="rgba(255,255,255,.4)"/>
+          <rect x="67" y="56" width="16" height="16" rx="4" fill="#c87840"/>
+          <ellipse cx="75" cy="44" rx="28" ry="30" fill="#c87840"/>
+          <path d="M48 36 Q50 18 75 14 Q100 18 102 36 Q90 28 75 26 Q60 28 48 36Z" fill="#c04020"/>
+          <path d="M48 36 Q46 30 50 26 Q62 20 75 18 Q88 20 100 26 Q104 30 102 36" fill="#d05030" opacity=".7"/>
+          <path d="M48 36 Q42 40 44 46 Q50 44 52 40" fill="#b03020"/>
+          <path d="M102 36 Q108 40 106 46 Q100 44 98 40" fill="#b03020"/>
+          <circle cx="75" cy="20" r="5" fill="#fdd878"/><circle cx="75" cy="20" r="3" fill="#f5a030"/>
+          <ellipse cx="64" cy="44" rx="5" ry="6" fill="#1a0800"/>
+          <ellipse cx="86" cy="44" rx="5" ry="6" fill="#1a0800"/>
+          <circle cx="65" cy="42" r="2" fill="#fff" opacity=".5"/>
+          <circle cx="87" cy="42" r="2" fill="#fff" opacity=".5"/>
+          <path d="M58 36 Q64 33 70 36" fill="none" stroke="#3a1800" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M80 36 Q86 33 92 36" fill="none" stroke="#3a1800" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M73 46 Q70 52 68 55 Q75 58 82 55 Q80 52 77 46" fill="#b06830" opacity=".5"/>
+          <path d="M50 54 Q52 70 60 80 Q75 90 90 80 Q98 70 100 54 Q90 62 75 64 Q60 62 50 54Z" fill="#e8e0d8"/>
+          <path d="M60 80 Q75 92 90 80 Q85 88 75 90 Q65 88 60 80Z" fill="#d0c8c0"/>
+          <path d="M62 56 Q68 60 75 58 Q82 60 88 56 Q82 62 75 60 Q68 62 62 56Z" fill="#c0b8b0"/>
+          <circle cx="75" cy="30" r="3" fill="#c0392b"/>
+          <rect x="73.5" y="24" width="3" height="8" rx="1" fill="#f5a030" opacity=".8"/>
+          <path d="M55 70 Q75 65 95 70" fill="none" stroke="rgba(255,255,200,.6)" stroke-width="1.5"/>
+          <path d="M55 90 Q75 100 95 90" fill="none" stroke="#8b4513" stroke-width="3" stroke-dasharray="4,3"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="ground"></div>
+  <button class="enter-hut-btn" onclick="enterHut()">🔮 &nbsp;SEEK YOUR DESTINY&nbsp; 🔮</button>
+</div>
+
+<!-- ══ FORM ══ -->
+<div class="screen" id="s-form">
+  <div class="form-card">
+    <div class="form-mandala">🕉️</div>
+    <div class="form-title">REVEAL YOUR KUNDALI</div>
+    <div class="form-sub">Enter your details · The stars shall speak</div>
+    <div class="form-accuracy">~90% accuracy · For exact Rashi, consult a certified Jyotishi with full birth chart</div>
+
+    <div class="fg">
+      <label class="fl">Full Name</label>
+      <input class="fi" id="inp-name" type="text" placeholder="As given at birth..." maxlength="50"/>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Date of Birth</label>
+      <div class="row3">
+        <select class="dsel" id="inp-day"><option value="">Day</option></select>
+        <select class="dsel" id="inp-month"><option value="">Month</option></select>
+        <select class="dsel" id="inp-year"><option value="">Year</option></select>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Time of Birth</label>
+      <div class="row2">
+        <select class="dsel" id="inp-hour"><option value="">Hour</option></select>
+        <select class="dsel" id="inp-min"><option value="">Minute</option></select>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Place of Birth</label>
+      <input class="fi" id="inp-place" type="text" placeholder="City, Country..." maxlength="60"/>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Gender</label>
+      <div class="grow">
+        <div class="gbtn" onclick="selG(this,'M')">♂ Male</div>
+        <div class="gbtn" onclick="selG(this,'F')">♀ Female</div>
+        <div class="gbtn" onclick="selG(this,'O')">✦ Other</div>
+      </div>
+    </div>
+
+    <button class="reveal-btn" onclick="doReading()">✦ &nbsp;CONSULT THE ASTROLOGER&nbsp; ✦</button>
+    <div class="err" id="err-msg"></div>
+  </div>
+</div>
+
+<!-- ══ READING ══ -->
+<div class="screen" id="s-reading">
+  <div class="reading-inner" id="reading-inner"></div>
+</div>
+
+<script>
+const cur=document.getElementById('cur');
+document.addEventListener('mousemove',e=>{cur.style.left=e.clientX+'px';cur.style.top=e.clientY+'px';});
+
+// fireflies
+const ff=document.getElementById('fireflies');
+for(let i=0;i<16;i++){
+  const f=document.createElement('div');
+  const x=Math.round(Math.random()*40-20),y=Math.round(Math.random()*30-15);
+  f.style.cssText=`position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(255,240,100,.85);box-shadow:0 0 8px rgba(255,240,80,.9);left:${5+Math.random()*90}%;top:${30+Math.random()*65}%;animation:ff${i} ${3+Math.random()*4}s ease-in-out ${-Math.random()*4}s infinite;`;
+  ff.appendChild(f);
+  const st=document.createElement('style');
+  st.textContent=`@keyframes ff${i}{0%,100%{opacity:0;transform:translate(0,0)}20%{opacity:1}50%{opacity:.8;transform:translate(${x}px,${y}px)}80%{opacity:.4}}`;
+  document.head.appendChild(st);
+}
+
+// Dropdowns
+const days=document.getElementById('inp-day');
+const months=document.getElementById('inp-month');
+const years=document.getElementById('inp-year');
+const hours=document.getElementById('inp-hour');
+const mins=document.getElementById('inp-min');
+for(let d=1;d<=31;d++){const o=document.createElement('option');o.value=d;o.textContent=d;days.appendChild(o);}
+['January','February','March','April','May','June','July','August','September','October','November','December'].forEach((m,i)=>{const o=document.createElement('option');o.value=i+1;o.textContent=m;months.appendChild(o);});
+const yr=new Date().getFullYear();
+for(let y=yr;y>=1940;y--){const o=document.createElement('option');o.value=y;o.textContent=y;years.appendChild(o);}
+for(let h=0;h<=23;h++){const o=document.createElement('option');o.value=h;o.textContent=(h<10?'0':'')+h+':00 '+(h<12?'AM':'PM').replace('0:00 AM','12:00 AM');hours.appendChild(o);}
+for(let m=0;m<60;m+=5){const o=document.createElement('option');o.value=m;o.textContent=(m<10?'0':'')+m;mins.appendChild(o);}
+
+let gender='';
+function selG(el,g){gender=g;document.querySelectorAll('.gbtn').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');}
+
+// ── AUDIO ──
+let AC,mG,mainG;
+function initAudio(){
+  if(AC)return;
+  AC=new(window.AudioContext||window.webkitAudioContext)();
+  mG=AC.createGain();mG.gain.value=.58;mG.connect(AC.destination);
+  mainG=AC.createGain();mainG.gain.value=0;mainG.connect(mG);
+  buildMusic();
+}
+function buildMusic(){
+  const rev=AC.createConvolver();
+  const rb=AC.createBuffer(2,AC.sampleRate*2,AC.sampleRate);
+  for(let c=0;c<2;c++){const d=rb.getChannelData(c);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.5)*.8;}
+  rev.buffer=rb;
+  const flt=AC.createBiquadFilter();flt.type='lowpass';flt.frequency.value=1400;flt.Q.value=.9;
+  const g2=AC.createGain();g2.gain.value=.35;
+  mainG.connect(flt);flt.connect(g2);g2.connect(rev);rev.connect(mG);mainG.connect(mG);
+
+  const DRONE=138.6;
+  // tanpura drone
+  [DRONE,DRONE*2,DRONE*.5].forEach((f,i)=>{
+    const os=AC.createOscillator(),g=AC.createGain();
+    os.type='sawtooth';os.frequency.value=f;g.gain.value=.04-i*.01;
+    const lf=AC.createOscillator(),lg=AC.createGain();
+    lf.frequency.value=.04+i*.02;lg.gain.value=1.5;lf.connect(lg);lg.connect(os.frequency);lf.start();
+    os.connect(g);g.connect(mainG);os.start();
+  });
+
+  // raga melody — Bhairavi inspired
+  const NOTES=[138.6,155.6,164.8,174.6,185,207.7,220,246.9,261.6,277.2];
+  let mi=0;
+  function playNote(){
+    const t=AC.currentTime,n=NOTES[mi%NOTES.length];mi++;
+    const os=AC.createOscillator(),g=AC.createGain();
+    os.type='triangle';os.frequency.value=n*.98;
+    os.frequency.linearRampToValueAtTime(n,t+.18);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.09,t+.16);g.gain.setTargetAtTime(0,t+1.4,.28);
+    os.connect(g);g.connect(mainG);os.start(t);os.stop(t+2.2);
+    const gap=mi%4===0?1600:mi%2===0?900:650;
+    setTimeout(playNote,gap);
+  }
+  setTimeout(playNote,800);
+
+  // tabla
+  function tabla(){
+    if(!AC)return;const t=AC.currentTime;
+    const os=AC.createOscillator(),g=AC.createGain();
+    os.type='sine';os.frequency.value=115;os.frequency.exponentialRampToValueAtTime(58,t+.09);
+    g.gain.setValueAtTime(.22,t);g.gain.exponentialRampToValueAtTime(.001,t+.2);
+    os.connect(g);g.connect(mG);os.start(t);os.stop(t+.22);
+    const b=AC.createBuffer(1,AC.sampleRate*.055,AC.sampleRate);
+    const d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2)*.38;
+    const s=AC.createBufferSource(),g2=AC.createGain(),f2=AC.createBiquadFilter();
+    f2.type='bandpass';f2.frequency.value=900;f2.Q.value=3;g2.gain.value=.055;
+    s.buffer=b;s.connect(f2);f2.connect(g2);g2.connect(mG);s.start(t+.48);
+    setTimeout(tabla,800+(Math.random()>.3?0:400));
+  }
+  setTimeout(tabla,500);
+
+  // ghanta bells
+  function bell(){
+    if(!AC)return;const t=AC.currentTime;
+    [880,1320,1760].forEach((f,i)=>{
+      const os=AC.createOscillator(),g=AC.createGain();os.type='sine';os.frequency.value=f;
+      g.gain.setValueAtTime(.045,t+i*.01);g.gain.exponentialRampToValueAtTime(.001,t+2.2);
+      os.connect(g);g.connect(mainG);os.start(t);os.stop(t+2.3);
+    });
+    setTimeout(bell,7000+Math.random()*5000);
+  }
+  setTimeout(bell,3000);
+  mainG.gain.setTargetAtTime(.75,AC.currentTime,2.5);
+}
+
+function playBell(){
+  if(!AC)return;const t=AC.currentTime;
+  [880,1100,1320,1760].forEach((f,i)=>{
+    const os=AC.createOscillator(),g=AC.createGain();os.type='sine';os.frequency.value=f;
+    g.gain.setValueAtTime(.13,t+i*.025);g.gain.exponentialRampToValueAtTime(.001,t+1.8);
+    os.connect(g);g.connect(mG);os.start(t+i*.025);os.stop(t+1.9);
+  });
+}
+
+function xfade(a,b,cb){
+  const tf=document.getElementById('tfade');
+  tf.classList.add('on');
+  setTimeout(()=>{
+    document.getElementById(a).classList.remove('on');
+    document.getElementById(b).classList.add('on');
+    if(b==='s-reading'){document.getElementById('s-reading').scrollTop=0;}
+    tf.classList.remove('on');
+    if(cb)cb();
+  },700);
+}
+function enterHut(){initAudio();playBell();xfade('s-hut','s-form');}
+
+// ── ASTROLOGY DATA ──
+const SIGNS=[
+  {name:'Capricorn',san:'मकर',sym:'♑',emoji:'🐐',rashi:'Makar',planet:'Saturn (शनि)',color:'#708090',gem:'Blue Sapphire (नीलम)',traits:['Disciplined','Ambitious','Patient','Practical','Responsible'],lucky:8,lcolor:'Blue',element:'Earth (पृथ्वी)',compat:['Taurus','Virgo','Scorpio','Pisces']},
+  {name:'Aquarius',san:'कुम्भ',sym:'♒',emoji:'🏺',rashi:'Kumbh',planet:'Saturn (शनि)',color:'#4169E1',gem:'Blue Sapphire (नीलम)',traits:['Independent','Innovative','Humanitarian','Eccentric','Visionary'],lucky:4,lcolor:'Electric Blue',element:'Air (वायु)',compat:['Gemini','Libra','Sagittarius','Aries']},
+  {name:'Pisces',san:'मीन',sym:'♓',emoji:'🐟',rashi:'Meen',planet:'Jupiter (बृहस्पति)',color:'#9370DB',gem:'Yellow Sapphire (पुखराज)',traits:['Intuitive','Compassionate','Artistic','Dreamy','Sensitive'],lucky:3,lcolor:'Sea Green',element:'Water (जल)',compat:['Cancer','Scorpio','Capricorn','Taurus']},
+  {name:'Aries',san:'मेष',sym:'♈',emoji:'🐏',rashi:'Mesh',planet:'Mars (मंगल)',color:'#FF4500',gem:'Red Coral (मूंगा)',traits:['Courageous','Energetic','Enthusiastic','Impulsive','Natural Leader'],lucky:9,lcolor:'Red',element:'Fire (अग्नि)',compat:['Leo','Sagittarius','Gemini','Aquarius']},
+  {name:'Taurus',san:'वृषभ',sym:'♉',emoji:'🐂',rashi:'Vrishabh',planet:'Venus (शुक्र)',color:'#228B22',gem:'Diamond (हीरा)',traits:['Reliable','Patient','Devoted','Stubborn','Sensual'],lucky:6,lcolor:'Green',element:'Earth (पृथ्वी)',compat:['Virgo','Capricorn','Cancer','Pisces']},
+  {name:'Gemini',san:'मिथुन',sym:'♊',emoji:'👯',rashi:'Mithun',planet:'Mercury (बुध)',color:'#FFD700',gem:'Emerald (पन्ना)',traits:['Adaptable','Witty','Curious','Communicative','Versatile'],lucky:5,lcolor:'Yellow',element:'Air (वायु)',compat:['Libra','Aquarius','Aries','Leo']},
+  {name:'Cancer',san:'कर्क',sym:'♋',emoji:'🦀',rashi:'Kark',planet:'Moon (चंद्र)',color:'#C0C0C0',gem:'Pearl (मोती)',traits:['Nurturing','Intuitive','Loyal','Emotional','Protective'],lucky:2,lcolor:'Silver',element:'Water (जल)',compat:['Scorpio','Pisces','Taurus','Virgo']},
+  {name:'Leo',san:'सिंह',sym:'♌',emoji:'🦁',rashi:'Simha',planet:'Sun (सूर्य)',color:'#FF8C00',gem:'Ruby (माणिक)',traits:['Generous','Confident','Dramatic','Creative','Loyal'],lucky:1,lcolor:'Gold',element:'Fire (अग्नि)',compat:['Aries','Sagittarius','Gemini','Libra']},
+  {name:'Virgo',san:'कन्या',sym:'♍',emoji:'🌾',rashi:'Kanya',planet:'Mercury (बुध)',color:'#8FBC8F',gem:'Emerald (पन्ना)',traits:['Analytical','Meticulous','Modest','Helpful','Perfectionist'],lucky:5,lcolor:'Green',element:'Earth (पृथ्वी)',compat:['Taurus','Capricorn','Cancer','Scorpio']},
+  {name:'Libra',san:'तुला',sym:'♎',emoji:'⚖️',rashi:'Tula',planet:'Venus (शुक्र)',color:'#FFB6C1',gem:'Diamond (हीरा)',traits:['Diplomatic','Graceful','Fair-minded','Social','Idealistic'],lucky:6,lcolor:'Pink',element:'Air (वायु)',compat:['Gemini','Aquarius','Leo','Sagittarius']},
+  {name:'Scorpio',san:'वृश्चिक',sym:'♏',emoji:'🦂',rashi:'Vrishchik',planet:'Mars (मंगल)',color:'#8B0000',gem:'Red Coral (मूंगा)',traits:['Passionate','Resourceful','Brave','Stubborn','Mysterious'],lucky:9,lcolor:'Dark Red',element:'Water (जल)',compat:['Cancer','Pisces','Virgo','Capricorn']},
+  {name:'Sagittarius',san:'धनु',sym:'♐',emoji:'🏹',rashi:'Dhanu',planet:'Jupiter (बृहस्पति)',color:'#9400D3',gem:'Yellow Sapphire (पुखराज)',traits:['Optimistic','Adventurous','Philosophical','Honest','Restless'],lucky:3,lcolor:'Purple',element:'Fire (अग्नि)',compat:['Aries','Leo','Libra','Aquarius']},
+];
+
+// EXACT sun sign boundaries [month, day] = sign index
+// returns sign index (0=Cap,1=Aqr,2=Pis,3=Ari,4=Tau,5=Gem,6=Can,7=Leo,8=Vir,9=Lib,10=Sco,11=Sag)
+function getSunSign(month,day){
+  // boundaries: [startMonth, startDay, signIdx]
+  const bounds=[
+    [1,20,1],[2,19,2],[3,21,3],[4,20,4],[5,21,5],[6,21,6],
+    [7,23,7],[8,23,8],[9,23,9],[10,23,10],[11,22,11],[12,22,0]
+  ];
+  for(let i=0;i<bounds.length;i++){
+    const[bm,bd,si]=bounds[i];
+    if(month===bm&&day>=bd)return SIGNS[si];
+    if(month===bm&&day<bd)return SIGNS[(si-1+12)%12];
+  }
+  // Dec 1-21 = Sagittarius
+  if(month===12&&day<22)return SIGNS[11];
+  return SIGNS[0];
+}
+
+// RASHI approximation using birth date + time
+// Moon moves ~13.2 degrees/day, changes sign every ~2.25 days
+// We use a simplified ephemeris offset from a known reference
+// Reference: Jan 1 2000 00:00 UTC Moon was in Aries (approx sign index 3)
+function getRashi(day,month,year,hour,minute){
+  // Days since J2000.0 (Jan 1.5 2000)
+  const monthDays=[0,31,59,90,120,151,181,212,243,273,304,334];
+  const isLeap=y=>(y%4===0&&y%100!==0)||(y%400===0);
+  let doy=monthDays[month-1]+day;
+  if(month>2&&isLeap(year))doy++;
+  // total days from Jan 1 2000
+  let totalDays=(year-2000)*365.25+doy-1+(hour+minute/60)/24;
+  // Moon sidereal period ~27.32 days, 12 signs
+  // Approximate: moon sign index from days elapsed
+  // Reference offset calibrated: Jan 1 2000 00:00 ~ Aries (3)
+  const moonCycledays=27.32;
+  const signDuration=moonCycledays/12; // ~2.277 days per sign
+  const refSignIdx=3; // Aries on J2000 approx
+  const elapsed=((totalDays%moonCycledays)+moonCycledays)%moonCycledays;
+  const rawIdx=Math.floor(elapsed/signDuration);
+  // Rashi order in Vedic: Aries=0,Taurus=1...
+  // Map rawIdx to Vedic rashi then to our SIGNS array
+  const rashiToSign=[3,4,5,6,7,8,9,10,11,0,1,2]; // Aries->idx3, Taurus->idx4...
+  return SIGNS[rashiToSign[rawIdx%12]];
+}
+
+// Numerology — Chaldean
+const CHALDEAN={a:1,b:2,c:3,d:4,e:5,f:8,g:3,h:5,i:1,j:1,k:2,l:3,m:4,n:5,o:7,p:8,q:1,r:2,s:3,t:4,u:6,v:6,w:6,x:5,y:1,z:7};
+function nameNum(name){
+  let s=name.toLowerCase().replace(/[^a-z]/g,'').split('').reduce((a,c)=>a+(CHALDEAN[c]||0),0);
+  while(s>9&&s!==11&&s!==22){let r=0;while(s>0){r+=s%10;s=Math.floor(s/10);}s=r;}
+  return s;
+}
+function lifePathNum(d,m,y){
+  let s=[...String(d)+String(m)+String(y)].reduce((a,c)=>a+parseInt(c),0);
+  while(s>9&&s!==11&&s!==22){let r=0;while(s>0){r+=s%10;s=Math.floor(s/10);}s=r;}
+  return s;
+}
+const NUM_MEANINGS={
+  1:"The Leader. You are born to initiate, lead and innovate. Sun (सूर्य) is your ruling planet.",
+  2:"The Peacemaker. Sensitivity and diplomacy define you. Moon (चंद्र) guides your emotions.",
+  3:"The Creator. Expression and joy are your gifts. Jupiter (बृहस्पति) blesses your creativity.",
+  4:"The Builder. Discipline and determination build your legacy. Rahu (राहु) shapes your path.",
+  5:"The Freedom Seeker. Change and adventure fuel your soul. Mercury (बुध) quickens your mind.",
+  6:"The Nurturer. Love and responsibility define your purpose. Venus (शुक्र) adorns your path.",
+  7:"The Seeker. Wisdom and spirituality call to you. Ketu (केतु) deepens your insight.",
+  8:"The Achiever. Power and material mastery are your destiny. Saturn (शनि) tests and rewards.",
+  9:"The Humanitarian. Compassion and wisdom flow through you. Mars (मंगल) drives your mission.",
+  11:"The Intuitive Master. Higher consciousness and inspiration define you. A rare soul indeed.",
+  22:"The Master Builder. You have the power to turn grandest dreams into reality."
+};
+const PREDICTIONS=[
+  "The planets align in your favor this season. A new opportunity approaches from an unexpected direction — remain open to it.",
+  "Saturn's gaze brings discipline to your path. Challenges now are the foundation of tomorrow's victories.",
+  "Jupiter's blessing expands your horizons. Travel, education or a meaningful connection may enter your life soon.",
+  "The Moon's pull heightens your intuition. Trust your inner voice — it speaks ancient wisdom from past lives.",
+  "Mars energizes your ambitions. This is your time to act boldly on what you have been hesitating about.",
+  "Venus showers you with grace. Relationships deepen and creativity flourishes in this period.",
+  "Mercury sharpens your mind and tongue. Communication opens doors that have long been closed to you.",
+  "The karmic wheel turns in your favor. What you have given to the world shall return to you threefold.",
+  "Rahu's influence brings sudden change. Do not resist — transformation is the universe's greatest gift.",
+  "Ketu awakens your spiritual side. Detach from material worries and trust the cosmic plan unfolding.",
+];
+function getPred(lp,sign){return PREDICTIONS[(lp+sign.lucky)%PREDICTIONS.length];}
+
+// FORM
+function doReading(){
+  const name=document.getElementById('inp-name').value.trim();
+  const day=parseInt(document.getElementById('inp-day').value);
+  const month=parseInt(document.getElementById('inp-month').value);
+  const year=parseInt(document.getElementById('inp-year').value);
+  const hour=document.getElementById('inp-hour').value;
+  const min=document.getElementById('inp-min').value;
+  const place=document.getElementById('inp-place').value.trim();
+  const err=document.getElementById('err-msg');
+  if(!name){err.textContent='Please enter your name.';return;}
+  if(!day||!month||!year){err.textContent='Please select your complete date of birth.';return;}
+  err.textContent='';
+  const h=hour!==''?parseInt(hour):12;
+  const mn=min!==''?parseInt(min):0;
+  const sun=getSunSign(month,day);
+  const rashi=getRashi(day,month,year,h,mn);
+  const nn=nameNum(name);
+  const lp=lifePathNum(day,month,year);
+  const pred=getPred(lp,sun);
+  buildReading(name,day,month,year,h,mn,place,sun,rashi,nn,lp,pred);
+  playBell();
+  xfade('s-form','s-reading');
+}
+
+function buildReading(name,day,month,year,hour,min,place,sun,rashi,nn,lp,pred){
+  const mnames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const timeStr=hour!==undefined?`${hour<10?'0':''}${hour}:${min<10?'0':''}${min}`:'Unknown time';
+  const placeStr=place||'Unknown place';
+  const firstName=name.split(' ')[0];
+  const inner=document.getElementById('reading-inner');
+  inner.innerHTML=`
+  <div class="ast-speech">
+    <div class="ast-face">🧙</div>
+    <div class="ast-bubble">
+      <div class="ast-nametag">PANDIT JI SPEAKS</div>
+      Ah, ${firstName}... born on ${day} ${mnames[month-1]} ${year}, at ${timeStr}, in ${placeStr}. The cosmos has been waiting for this moment. Let me read what the heavens have written for you...
+    </div>
+  </div>
+
+  <div class="signs-row">
+    <div class="sign-badge">
+      <div class="sb-label">☀️ Sun Sign (Western)</div>
+      <span class="sb-sym">${sun.emoji}</span>
+      <div class="sb-name">${sun.name} ${sun.sym}</div>
+      <div class="sb-san">${sun.san}</div>
+    </div>
+    <div class="sign-badge">
+      <div class="sb-label">🌙 Rashi (Vedic)</div>
+      <span class="sb-sym">${rashi.emoji}</span>
+      <div class="sb-name">${rashi.name} ${rashi.sym}</div>
+      <div class="sb-san">${rashi.san} · ${rashi.rashi}</div>
+    </div>
+  </div>
+
+  <div class="info-grid">
+    <div class="ic"><span class="ic-ico">💎</span><div class="ic-lbl">Gemstone</div><div class="ic-val" style="font-size:12px;">${sun.gem}</div><div class="ic-sub">For blessings</div></div>
+    <div class="ic"><span class="ic-ico">🎨</span><div class="ic-lbl">Lucky Color</div><div class="ic-val">${sun.lcolor}</div><div class="ic-sub">Attracts fortune</div></div>
+    <div class="ic"><span class="ic-ico">🔢</span><div class="ic-lbl">Lucky Number</div><div class="ic-val">${sun.lucky}</div><div class="ic-sub">Power digit</div></div>
+    <div class="ic"><span class="ic-ico">🪐</span><div class="ic-lbl">Ruling Planet</div><div class="ic-val" style="font-size:12px;">${sun.planet}</div><div class="ic-sub">Cosmic guide</div></div>
+    <div class="ic"><span class="ic-ico">🌊</span><div class="ic-lbl">Element</div><div class="ic-val" style="font-size:13px;">${sun.element}</div><div class="ic-sub">Your nature</div></div>
+    <div class="ic"><span class="ic-ico">🌙</span><div class="ic-lbl">Rashi Planet</div><div class="ic-val" style="font-size:12px;">${rashi.planet}</div><div class="ic-sub">Moon's ruler</div></div>
+  </div>
+
+  <div class="sec-title">Your Cosmic Traits</div>
+  <div class="traits-wrap">${sun.traits.map(t=>`<div class="tpill">✦ ${t}</div>`).join('')}</div>
+
+  <div class="num-card" style="background:linear-gradient(135deg,rgba(80,20,100,.42),rgba(40,10,60,.65));border:1px solid rgba(180,80,255,.2);">
+    <div class="num-big" style="color:#c084fc;text-shadow:0 0 30px rgba(192,132,252,.5);">${lp}</div>
+    <div class="num-lbl" style="color:rgba(192,132,252,.6);">Life Path Number · Vedic Numerology</div>
+    <div class="num-mean" style="color:rgba(192,132,252,.72);">${NUM_MEANINGS[lp]||NUM_MEANINGS[9]}</div>
+  </div>
+
+  <div class="num-card" style="background:linear-gradient(135deg,rgba(180,60,20,.42),rgba(100,30,10,.65));border:1px solid rgba(255,150,60,.2);">
+    <div class="num-big" style="color:#f5a830;font-size:42px;text-shadow:0 0 28px rgba(245,168,48,.5);">${nn}</div>
+    <div class="num-lbl" style="color:rgba(245,168,48,.6);">Name Number · Chaldean System</div>
+    <div class="num-mean" style="color:rgba(245,180,80,.72);">${NUM_MEANINGS[nn]||NUM_MEANINGS[9]}</div>
+  </div>
+
+  <div class="pred-card">
+    <div class="pred-title">✦ COSMIC FORECAST ✦</div>
+    <div class="pred-txt">"${pred}"</div>
+    <div style="margin-top:10px;font-size:10px;color:rgba(100,200,80,.38);letter-spacing:2px;">Based on Sun Sign & Life Path · Place: ${placeStr}</div>
+  </div>
+
+  <div class="sec-title">Most Compatible Signs</div>
+  <div class="compat-wrap">${sun.compat.map(c=>{const s=SIGNS.find(x=>x.name===c);return`<div class="cpill"><span class="cp-sym">${s?s.emoji:'⭐'}</span><span class="cp-name">${c} ${s?s.sym:''}</span></div>`;}).join('')}</div>
+
+  <div class="ast-speech" style="margin-top:10px;">
+    <div class="ast-face">🧙</div>
+    <div class="ast-bubble">
+      <div class="ast-nametag">PANDIT JI — ASHIRVAAD</div>
+      May Lord Ganesha remove all obstacles from your path, ${firstName}. May the nine planets — Navagraha — bless you with health, wealth, and wisdom. Om Shanti. 🙏
+    </div>
+  </div>
+
+  <div class="accuracy-note">~90% accuracy · Rashi calculated using birth date & time · For 100% precision, a full Kundali with exact coordinates is recommended</div>
+
+  <button class="again-btn" onclick="restart()">🔮 &nbsp;Read Another's Stars&nbsp; 🔮</button>
+  `;
+  inner.scrollTop=0;
+}
+
+function restart(){
+  document.getElementById('inp-name').value='';
+  document.getElementById('inp-day').value='';
+  document.getElementById('inp-month').value='';
+  document.getElementById('inp-year').value='';
+  document.getElementById('inp-hour').value='';
+  document.getElementById('inp-min').value='';
+  document.getElementById('inp-place').value='';
+  document.getElementById('err-msg').textContent='';
+  document.querySelectorAll('.gbtn').forEach(b=>b.classList.remove('sel'));
+  gender='';
+  xfade('s-reading','s-form');
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('s-form').classList.contains('on'))doReading();});
+</script>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Immersive Would You Rather</title>
+<style>
+*{box-sizing:border-box}
+body,html{margin:0;padding:0;overflow:hidden;background:#02030a;color:white;font-family:system-ui,Segoe UI}
+#canvas{position:absolute;top:0;left:0;z-index:0}
+
+.overlay{position:absolute;width:100%;height:100%;display:flex;z-index:2}
+.option{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px;cursor:pointer;position:relative}
+
+.left{background:radial-gradient(circle at center, rgba(0,120,255,0.25), transparent 70%)}
+.right{background:radial-gradient(circle at center, rgba(255,80,0,0.25), transparent 70%)}
+
+.text{font-size:30px;font-weight:600;max-width:420px;line-height:1.4;text-shadow:0 0 20px rgba(0,0,0,1)}
+.sub{font-size:14px;opacity:0.7;margin-top:10px}
+
+.world{
+ position:absolute;width:100%;height:100%;z-index:1;pointer-events:none;
+ background:radial-gradient(circle at 30% 40%, rgba(0,150,255,0.1), transparent 60%),
+ radial-gradient(circle at 70% 60%, rgba(255,100,0,0.1), transparent 60%);
+ animation:moveBg 10s linear infinite;
+}
+@keyframes moveBg{
+ 0%{transform:scale(1)}
+ 50%{transform:scale(1.1)}
+ 100%{transform:scale(1)}
+}
+
+.fade{animation:fadeOut 0.8s forwards}
+@keyframes fadeOut{to{opacity:0;transform:scale(1.1)}}
+</style>
+</head>
+<body>
+<div class="world"></div>
+<canvas id="canvas"></canvas>
+<div class="overlay">
+ <div class="option left" id="left"><div><div class="text"></div><div class="sub"></div></div></div>
+ <div class="option right" id="right"><div><div class="text"></div><div class="sub"></div></div></div>
+</div>
+
+<script>
+const canvas=document.getElementById('canvas');
+const ctx=canvas.getContext('2d');
+canvas.width=innerWidth;canvas.height=innerHeight;
+
+let particles=[];
+let mouse={x:innerWidth/2,y:innerHeight/2,active:false};
+
+for(let i=0;i<600;i++){
+ particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:0,vy:0,color:Math.random()>0.5?"#4da6ff":"#ff6a3d"});
+}
+
+window.onmousemove=e=>{mouse.x=e.clientX;mouse.y=e.clientY};
+
+function animate(){
+ ctx.fillStyle="rgba(2,3,10,0.25)";
+ ctx.fillRect(0,0,canvas.width,canvas.height);
+
+ particles.forEach(p=>{
+  let dx=mouse.x-p.x;
+  let dy=mouse.y-p.y;
+
+  if(mouse.active){
+   let angle=Math.atan2(dy,dx);
+   p.vx+=Math.cos(angle)*0.6;
+   p.vy+=Math.sin(angle)*0.6;
+  }
+
+  p.x+=p.vx; p.y+=p.vy;
+  p.vx*=0.92; p.vy*=0.92;
+
+  ctx.beginPath();
+  ctx.arc(p.x,p.y,2,0,Math.PI*2);
+  ctx.fillStyle=p.color;
+  ctx.fill();
+ });
+ requestAnimationFrame(animate);
+}
+animate();
+
+// AUDIO
+const audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+function playClick(){
+ const o=audioCtx.createOscillator();
+ const g=audioCtx.createGain();
+ o.frequency.value=100; g.gain.value=0.2;
+ o.connect(g); g.connect(audioCtx.destination);
+ o.start(); o.stop(audioCtx.currentTime+0.15);
+}
+function playBurst(){
+ const o=audioCtx.createOscillator();
+ const g=audioCtx.createGain();
+ o.frequency.setValueAtTime(200,audioCtx.currentTime);
+ o.frequency.exponentialRampToValueAtTime(30,audioCtx.currentTime+0.4);
+ g.gain.value=0.3;
+ o.connect(g); g.connect(audioCtx.destination);
+ o.start(); o.stop(audioCtx.currentTime+0.4);
+}
+
+const questions=[
+ ["Live forever but forget everything every 10 years","Keep every memory but live only 50 years","Identity vs Legacy"],
+ ["Be loved by everyone but love no one","Love deeply but never be loved back","Connection vs Pain"],
+ ["Live in a dream world you control","Live in reality you can't change","Illusion vs Truth"],
+ ["Control time but age twice as fast","Freeze time but lose yourself","Power vs Self"],
+ ["Travel the universe alone","Live one life with your soulmate","Infinity vs Intimacy"],
+ ["Relive your best moment forever","Keep moving forward forgetting the past","Comfort vs Growth"],
+ ["Become a god with no emotions","Stay human with all your flaws","Power vs Humanity"],
+ ["Walk through dreams","Shape reality itself","Fantasy vs Control"],
+ ["Live underwater with glowing creatures","Live among stars in silence","Depth vs Vastness"],
+ ["Always know the truth","Always believe a beautiful lie","Reality vs Peace"]
+];
+
+let index=0;
+const leftText=document.querySelector('#left .text');
+const rightText=document.querySelector('#right .text');
+const leftSub=document.querySelector('#left .sub');
+const rightSub=document.querySelector('#right .sub');
+
+function loadQ(){
+ leftText.innerText=questions[index][0];
+ rightText.innerText=questions[index][1];
+ leftSub.innerText=questions[index][2];
+ rightSub.innerText=questions[index][2];
+}
+loadQ();
+
+function choose(){
+ mouse.active=true;
+ playClick();
+
+ setTimeout(()=>{
+  particles.forEach(p=>{
+   p.vx=(Math.random()-0.5)*30;
+   p.vy=(Math.random()-0.5)*30;
+  });
+  playBurst();
+
+  document.querySelectorAll('.option').forEach(o=>o.classList.add('fade'));
+
+  setTimeout(()=>{
+   index=(index+1)%questions.length;
+   document.querySelectorAll('.option').forEach(o=>o.classList.remove('fade'));
+   loadQ();
+   mouse.active=false;
+  },800);
+ },200);
+}
+
+document.getElementById('left').onclick=choose;
+document.getElementById('right').onclick=choose;
+</script>
+</body>
+</html>
