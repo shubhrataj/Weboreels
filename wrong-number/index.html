@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Wrong Number</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;min-height:100vh;overflow:hidden;font-family:'Inter',sans-serif;cursor:none;}
+#cur{position:fixed;width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,0.6);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:difference;}
+#bg{position:fixed;inset:0;z-index:0;transition:background 2.5s ease;background:linear-gradient(160deg,#1a0533 0%,#3d1060 18%,#7b2d8b 36%,#c2527a 56%,#e8845a 74%,#f5b97a 88%,#fde4b0 100%);}
+.bokeh{position:fixed;border-radius:50%;filter:blur(50px);pointer-events:none;z-index:1;animation:drift linear infinite;}
+@keyframes drift{0%{transform:translateY(0) translateX(0)}33%{transform:translateY(-25px) translateX(12px)}66%{transform:translateY(8px) translateX(-8px)}100%{transform:translateY(0) translateX(0)}}
+.dust{position:fixed;width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,0.2);pointer-events:none;z-index:2;animation:fup linear infinite;}
+@keyframes fup{0%{transform:translateY(0);opacity:0}20%{opacity:.5}80%{opacity:.2}100%{transform:translateY(-100vh);opacity:0}}
+.screen{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .8s ease;}
+.screen.on{opacity:1;pointer-events:all;}
+
+/* INTRO */
+#s-intro{flex-direction:column;gap:0;text-align:center;}
+.i-time{font-size:72px;font-weight:200;color:rgba(255,255,255,.92);letter-spacing:-2px;text-shadow:0 0 60px rgba(255,255,255,.3);animation:tglow 3s ease-in-out infinite;}
+@keyframes tglow{0%,100%{text-shadow:0 0 60px rgba(255,255,255,.25)}50%{text-shadow:0 0 100px rgba(255,255,255,.5)}}
+.i-ampm{font-size:20px;font-weight:300;opacity:.55;letter-spacing:4px;}
+.i-date{font-size:13px;font-weight:300;color:rgba(255,255,255,.45);letter-spacing:3px;margin-top:4px;}
+.i-notif{margin-top:40px;background:rgba(255,255,255,.14);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.22);border-radius:18px;padding:14px 20px;display:flex;align-items:center;gap:12px;width:min(320px,85vw);animation:ndrop .6s cubic-bezier(.34,1.56,.64,1) 1.4s both;cursor:pointer;transition:transform .2s,background .2s;}
+.i-notif:hover{transform:scale(1.02);background:rgba(255,255,255,.2);}
+@keyframes ndrop{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:translateY(0)}}
+.ni-icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#34c759,#30d158);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.ni-body{flex:1;}
+.ni-app{font-size:11px;font-weight:600;color:rgba(255,255,255,.55);letter-spacing:.5px;margin-bottom:2px;}
+.ni-name{font-size:13px;font-weight:600;color:#fff;margin-bottom:2px;}
+.ni-prev{font-size:12px;color:rgba(255,255,255,.65);font-weight:300;}
+.ni-t{font-size:10px;color:rgba(255,255,255,.35);align-self:flex-start;}
+.i-hint{margin-top:14px;font-size:11px;color:rgba(255,255,255,.3);letter-spacing:2px;animation:fi 1s ease 2.4s both;}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+
+/* PHONE */
+#s-phone{align-items:center;justify-content:center;}
+.phone{width:min(360px,88vw);height:min(700px,88vh);background:#12111a;border-radius:44px;box-shadow:0 0 0 2px rgba(255,255,255,.1),0 0 0 8px rgba(0,0,0,.28),0 40px 80px rgba(0,0,0,.5),0 0 120px rgba(180,80,200,.12);display:flex;flex-direction:column;overflow:hidden;position:relative;animation:pin .8s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes pin{from{opacity:0;transform:scale(.85) translateY(28px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.phone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:28px;background:#12111a;border-radius:0 0 20px 20px;z-index:10;}
+.sbar{height:44px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 24px 6px;flex-shrink:0;}
+.sbar-t{font-size:13px;font-weight:600;color:#fff;}
+.sbar-i{font-size:12px;color:rgba(255,255,255,.75);letter-spacing:2px;}
+.chat-hdr{padding:10px 16px 12px;display:flex;align-items:center;gap:12px;flex-shrink:0;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.07);}
+.bk{font-size:22px;color:rgba(255,255,255,.65);cursor:pointer;padding:4px;}
+.cav{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#ff6b9d,#bf5af2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.cinfo{flex:1;}
+.cname{font-size:14px;font-weight:600;color:#fff;}
+.cstatus{font-size:11px;color:rgba(255,255,255,.35);margin-top:1px;}
+.msgs{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:6px;scroll-behavior:smooth;}
+.msgs::-webkit-scrollbar{width:0;}
+.msg{display:flex;flex-direction:column;max-width:76%;animation:mpop .3s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes mpop{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+.msg.them{align-self:flex-start;}
+.msg.me{align-self:flex-end;align-items:flex-end;}
+.bub{padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.45;word-break:break-word;}
+.them .bub{background:rgba(255,255,255,.13);color:#fff;border-bottom-left-radius:4px;backdrop-filter:blur(8px);}
+.me .bub{background:linear-gradient(135deg,#bf5af2,#9b59b6);color:#fff;border-bottom-right-radius:4px;}
+.mt{font-size:10px;color:rgba(255,255,255,.28);margin-top:3px;padding:0 4px;}
+.mr{font-size:10px;color:rgba(191,90,242,.55);margin-top:1px;}
+.tw-wrap{display:flex;align-self:flex-start;padding:4px 0;}
+.tw-bub{background:rgba(255,255,255,.13);backdrop-filter:blur(8px);padding:12px 16px;border-radius:18px;border-bottom-left-radius:4px;display:flex;gap:4px;align-items:center;}
+.td{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.45);}
+.td:nth-child(1){animation:td .9s ease-in-out infinite;}
+.td:nth-child(2){animation:td .9s ease-in-out .2s infinite;}
+.td:nth-child(3){animation:td .9s ease-in-out .4s infinite;}
+@keyframes td{0%,100%{transform:translateY(0);opacity:.35}50%{transform:translateY(-5px);opacity:1}}
+.reply-area{padding:10px 12px 18px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.18);}
+.rh{font-size:10px;color:rgba(255,255,255,.28);letter-spacing:1px;margin-bottom:8px;text-align:center;}
+.ropts{display:flex;flex-direction:column;gap:6px;}
+.rbtn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:10px 16px;font-family:'Inter',sans-serif;font-size:13px;color:rgba(255,255,255,.82);cursor:pointer;text-align:left;transition:background .2s,transform .15s,border-color .2s;backdrop-filter:blur(8px);}
+.rbtn:hover{background:rgba(191,90,242,.22);border-color:rgba(191,90,242,.45);transform:scale(1.01);}
+
+/* ENDING */
+#s-end{flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;}
+.ee{font-size:64px;margin-bottom:18px;animation:ef 3s ease-in-out infinite;}
+@keyframes ef{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.et{font-family:'Playfair Display',serif;font-size:clamp(26px,5.5vw,44px);font-style:italic;color:#fff;margin-bottom:10px;text-shadow:0 0 40px rgba(255,255,255,.25);}
+.es{font-size:clamp(12px,2vw,15px);color:rgba(255,255,255,.55);line-height:1.8;max-width:380px;margin:0 auto 28px;font-weight:300;}
+.ecard{background:rgba(255,255,255,.1);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:18px 26px;max-width:370px;margin-bottom:26px;}
+.eclbl{font-size:10px;letter-spacing:3px;color:rgba(255,255,255,.38);text-transform:uppercase;margin-bottom:8px;}
+.ectxt{font-size:14px;color:rgba(255,255,255,.82);line-height:1.72;font-style:italic;}
+.eagain{font-family:'Inter',sans-serif;font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.45);background:transparent;border:1px solid rgba(255,255,255,.18);border-radius:30px;padding:12px 30px;cursor:pointer;transition:border-color .3s,color .3s,background .3s;}
+.eagain:hover{border-color:rgba(255,255,255,.55);color:#fff;background:rgba(255,255,255,.07);}
+</style>
+</head>
+<body>
+<div id="cur"></div>
+<div id="bg"></div>
+<div class="bokeh" style="width:280px;height:280px;background:rgba(190,70,200,.13);top:-60px;left:-70px;animation-duration:13s;"></div>
+<div class="bokeh" style="width:240px;height:240px;background:rgba(255,130,70,.1);bottom:-50px;right:-50px;animation-duration:16s;animation-delay:-6s;"></div>
+<div class="bokeh" style="width:180px;height:180px;background:rgba(80,80,255,.1);top:45%;left:72%;animation-duration:19s;animation-delay:-9s;"></div>
+<div class="bokeh" style="width:160px;height:160px;background:rgba(255,90,140,.08);top:18%;right:8%;animation-duration:15s;animation-delay:-4s;"></div>
+
+<div class="screen on" id="s-intro">
+  <div class="i-time">2:17 <span class="i-ampm">AM</span></div>
+  <div class="i-date">FRIDAY &nbsp;·&nbsp; OCTOBER 13</div>
+  <div class="i-notif" onclick="goPhone()">
+    <div class="ni-icon">💬</div>
+    <div class="ni-body">
+      <div class="ni-app">MESSAGES</div>
+      <div class="ni-name">Unknown Number</div>
+      <div class="ni-prev">maya please i need you to—</div>
+    </div>
+    <div class="ni-t">now</div>
+  </div>
+  <div class="i-hint">tap to open</div>
+</div>
+
+<div class="screen" id="s-phone">
+  <div class="phone">
+    <div class="phone-notch"></div>
+    <div class="sbar"><div class="sbar-t">2:17</div><div class="sbar-i">▲ ●●●</div></div>
+    <div class="chat-hdr">
+      <div class="bk">‹</div>
+      <div class="cav">?</div>
+      <div class="cinfo">
+        <div class="cname">Unknown Number</div>
+        <div class="cstatus" id="cstatus">typing...</div>
+      </div>
+    </div>
+    <div class="msgs" id="msgs"></div>
+    <div class="reply-area">
+      <div class="rh">REPLY AS</div>
+      <div class="ropts" id="ropts"></div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="s-end">
+  <div class="ee" id="ee"></div>
+  <div class="et" id="et"></div>
+  <div class="es" id="es"></div>
+  <div class="ecard">
+    <div class="eclbl">You were just a stranger.</div>
+    <div class="ectxt" id="ectxt"></div>
+  </div>
+  <button class="eagain" onclick="restart()">↺ ANOTHER CHANCE</button>
+</div>
+
+<script>
+const cur=document.getElementById('cur');
+document.addEventListener('mousemove',e=>{cur.style.left=e.clientX+'px';cur.style.top=e.clientY+'px';});
+
+// dust
+for(let i=0;i<16;i++){const d=document.createElement('div');d.className='dust';d.style.left=Math.random()*100+'vw';d.style.top=Math.random()*100+'vh';d.style.animationDuration=(9+Math.random()*12)+'s';d.style.animationDelay=(-Math.random()*12)+'s';document.body.appendChild(d);}
+
+// AUDIO
+let AC,mG,mainG;
+function initAudio(){
+  if(AC)return;
+  AC=new(window.AudioContext||window.webkitAudioContext)();
+  mG=AC.createGain();mG.gain.value=.55;mG.connect(AC.destination);
+  mainG=AC.createGain();mainG.gain.value=0;mainG.connect(mG);
+  buildLofi();
+}
+function mkO(f,t,v){const o=AC.createOscillator(),g=AC.createGain();o.type=t;o.frequency.value=f;g.gain.value=v||.05;o.connect(g);g.connect(mainG);o.start();return{o,g};}
+function wobble(tgt,f,dep){const l=AC.createOscillator(),lg=AC.createGain();l.frequency.value=f;lg.gain.value=dep;l.connect(lg);lg.connect(tgt);l.start();}
+function buildLofi(){
+  const flt=AC.createBiquadFilter();flt.type='lowpass';flt.frequency.value=850;flt.Q.value=.7;
+  const compressor=AC.createDynamicsCompressor();compressor.threshold.value=-18;
+  mainG.connect(flt);flt.connect(compressor);compressor.connect(mG);
+  wobble(flt.frequency,.05,80);
+
+  const chords=[[220,277.2,329.6],[174.6,220,261.6],[130.8,164.8,196],[196,246.9,293.7]];
+  let ci=0;
+  function chord(){
+    const ch=chords[ci%chords.length];ci++;
+    ch.forEach((f,i)=>{
+      const o=AC.createOscillator(),g=AC.createGain();
+      o.type='triangle';o.frequency.value=f;
+      wobble(o.frequency,.07,1.1);
+      g.gain.setValueAtTime(0,AC.currentTime+i*.04);
+      g.gain.linearRampToValueAtTime(.065,AC.currentTime+i*.04+.12);
+      g.gain.setTargetAtTime(0,AC.currentTime+1.9,.35);
+      o.connect(g);g.connect(mainG);o.start();o.stop(AC.currentTime+3.2);
+    });
+    const b=AC.createOscillator(),bg=AC.createGain();
+    b.type='sine';b.frequency.value=chords[(ci)%chords.length][0]/2;
+    bg.gain.setValueAtTime(.12,AC.currentTime);bg.gain.setTargetAtTime(0,AC.currentTime+2,.3);
+    b.connect(bg);bg.connect(mainG);b.start();b.stop(AC.currentTime+3.2);
+  }
+  mainG.gain.setTargetAtTime(.85,AC.currentTime,2);
+  chord();setInterval(chord,3200);
+
+  // hihat
+  function hh(){if(!AC)return;const b=AC.createBuffer(1,AC.sampleRate*.035,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length)*.25;const s=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();f.type='highpass';f.frequency.value=8500;g.gain.value=.035;s.buffer=b;s.connect(f);f.connect(g);g.connect(mG);s.start();setTimeout(hh,Math.random()*350+180);}
+  hh();
+  // kick
+  function kk(){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=110;o.frequency.exponentialRampToValueAtTime(38,AC.currentTime+.14);g.gain.setValueAtTime(.28,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.22);o.connect(g);g.connect(mG);o.start();o.stop(AC.currentTime+.25);setTimeout(kk,800);}
+  setTimeout(kk,400);
+}
+function notifSound(){if(!AC)return;const t=AC.currentTime;[0,.13].forEach((dt,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=i===0?880:1100;g.gain.setValueAtTime(.14,t+dt);g.gain.exponentialRampToValueAtTime(.001,t+dt+.18);o.connect(g);g.connect(mG);o.start(t+dt);o.stop(t+dt+.2);});}
+function tapSound(){if(!AC)return;const b=AC.createBuffer(1,AC.sampleRate*.022,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length)*.45;const s=AC.createBufferSource(),g=AC.createGain();g.gain.value=.07;s.buffer=b;s.connect(g);g.connect(mG);s.start();}
+function shiftBg(grad){document.getElementById('bg').style.background=grad;}
+
+// STORY
+const STORY=[
+  {msgs:[{f:'them',t:'maya please i need you to answer'},{f:'them',t:'its been 3 days 💔'}],
+   ch:[{t:"I think you have the wrong number.",k:0,nx:1},{t:"...",k:-1,nx:1},{t:"Who is this?",k:1,nx:1}]},
+  {msgs:[{f:'them',t:'oh god'},{f:'them',t:'sorry. wrong number 😞'},{f:'them',t:'this is embarrassing lol'}],
+   ch:[{t:"It's okay. You alright?",k:2,nx:2},{t:"No worries. Take care 👋",k:0,nx:'cold'},{t:"Happens to everyone 😄",k:0,nx:'cold'}]},
+  {msgs:[{f:'them',t:'not really'},{f:'them',t:'maya was my best friend. she just stopped talking to me'},{f:'them',t:'no explanation. nothing.'}],
+   ch:[{t:"That's really hard. I'm sorry.",k:2,nx:3},{t:"Did you try calling her?",k:1,nx:3},{t:"Maybe she needs space.",k:-1,nx:3}]},
+  {msgs:[{f:'them',t:'i tried everything'},{f:'them',t:'why do people just disappear 😔'}],
+   ch:[{t:"I don't know. But you deserve answers.",k:2,nx:4},{t:"Sometimes people just move on.",k:-1,nx:4},{t:"Have you two fought before?",k:1,nx:4}]},
+  {msgs:[{f:'them',t:'can i ask you something weird'},{f:'them',t:'do you think its worth fighting for someone. or just let go'}],
+   ch:[{t:"Fight. Always.",k:2,nx:'hope'},{t:"Let go. Some things aren't meant to last.",k:-1,nx:'sad'},{t:"Only if they'd fight for you too.",k:1,nx:'real'}]}
+];
+
+const ENDS={
+  hope:{bg:'linear-gradient(160deg,#0a2010 0%,#153525 20%,#1e5530 40%,#2d7a45 55%,#c8a030 70%,#e8c060 85%,#fde4b0 100%)',emoji:'🌱',title:'You gave a stranger hope.',sub:'They stayed up talking to the wrong number.\nAnd somehow that was exactly right.',card:"They texted Maya the next morning. She answered. Sometimes one stranger who believes is all it takes."},
+  sad:{bg:'linear-gradient(160deg,#0a1525 0%,#0d2040 20%,#1a3560 40%,#2a5080 60%,#3a7090 80%,#4a8a9a 100%)',emoji:'🌧️',title:'You told them the truth.',sub:'Not every truth feels good.\nBut it was real.',card:"They cried for a while. Then slept. In the morning they felt lighter. Sometimes letting go is kindness."},
+  real:{bg:'linear-gradient(160deg,#1a0533 0%,#3d1060 18%,#7b2d8b 36%,#c2527a 56%,#e8845a 74%,#f5b97a 88%,#fde4b0 100%)',emoji:'🤍',title:'You said exactly the right thing.',sub:'A stranger. A phone. 2AM.\nAnd somehow — it helped.',card:"They thought about it for a long time. Then texted Maya: 'Would you fight for me?' Three dots appeared immediately."},
+  cold:{bg:'linear-gradient(160deg,#0a0015 0%,#180030 20%,#2d0045 40%,#3a0035 60%,#4a0a25 80%,#5a1a2a 100%)',emoji:'🌑',title:'You walked away.',sub:"That was allowed.\nYou don't owe anyone anything.",card:"They stayed up alone. Stared at Maya's contact. Put the phone down. Some nights just have to be survived."}
+};
+
+function xfade(a,b,cb){document.getElementById(a).classList.remove('on');setTimeout(()=>{document.getElementById(b).classList.add('on');if(cb)cb();},500);}
+
+function goPhone(){
+  initAudio();notifSound();
+  xfade('s-intro','s-phone',()=>setTimeout(()=>runStep(0),400));
+}
+
+function addMsg(from,text,delay,cb){
+  const msgs=document.getElementById('msgs');
+  if(from==='them'){
+    setTimeout(()=>{
+      const tw=document.createElement('div');tw.className='tw-wrap';tw.id='twi';
+      tw.innerHTML='<div class="tw-bub"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+      msgs.appendChild(tw);msgs.scrollTop=msgs.scrollHeight;
+    },Math.max(0,delay-700));
+  }
+  setTimeout(()=>{
+    const t=document.getElementById('twi');if(t)t.remove();
+    const el=document.createElement('div');el.className='msg '+(from==='them'?'them':'me');
+    el.innerHTML='<div class="bub">'+text+'</div><div class="mt">'+(from==='me'?'<span class="mr">Delivered</span>':'')+'</div>';
+    msgs.appendChild(el);msgs.scrollTop=msgs.scrollHeight;
+    notifSound();if(cb)cb();
+  },delay);
+}
+
+function runStep(idx){
+  const s=STORY[idx];
+  document.getElementById('ropts').innerHTML='';
+  document.getElementById('cstatus').textContent='typing...';
+  let d=350;
+  s.msgs.forEach((m,i)=>{
+    const last=i===s.msgs.length-1;
+    addMsg(m.f,m.t,d,last?()=>showChoices(s.ch,idx):null);
+    d+=950+m.t.length*16;
+  });
+}
+
+function showChoices(chs,idx){
+  document.getElementById('cstatus').textContent='waiting...';
+  const wrap=document.getElementById('ropts');wrap.innerHTML='';
+  chs.forEach(c=>{
+    const btn=document.createElement('button');btn.className='rbtn';btn.textContent=c.t;
+    btn.onclick=()=>pick(c);wrap.appendChild(btn);
+  });
+}
+
+function pick(c){
+  tapSound();
+  const msgs=document.getElementById('msgs');
+  const el=document.createElement('div');el.className='msg me';
+  el.innerHTML='<div class="bub">'+c.t+'</div><div class="mt"><span class="mr">✓✓</span></div>';
+  msgs.appendChild(el);msgs.scrollTop=msgs.scrollHeight;
+  document.getElementById('ropts').innerHTML='';
+  if(typeof c.nx==='string'){setTimeout(()=>showEnding(c.nx),700);}
+  else{setTimeout(()=>runStep(c.nx),550);}
+}
+
+function showEnding(key){
+  const e=ENDS[key];
+  shiftBg(e.bg);
+  document.getElementById('ee').textContent=e.emoji;
+  document.getElementById('et').textContent=e.title;
+  document.getElementById('es').textContent=e.sub;
+  document.getElementById('ectxt').textContent=e.card;
+  if(mainG&&AC)mainG.gain.setTargetAtTime(key==='cold'?.2:.7,AC.currentTime,1.5);
+  xfade('s-phone','s-end');
+}
+
+function restart(){
+  document.getElementById('msgs').innerHTML='';
+  document.getElementById('ropts').innerHTML='';
+  shiftBg('linear-gradient(160deg,#1a0533 0%,#3d1060 18%,#7b2d8b 36%,#c2527a 56%,#e8845a 74%,#f5b97a 88%,#fde4b0 100%)');
+  xfade('s-end','s-intro');
+}
+
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('s-phone').classList.contains('on'))return;
+  const m={'1':0,'2':1,'3':2};const idx=m[e.key];
+  if(idx!==undefined){const b=document.querySelectorAll('.rbtn');if(b[idx])b[idx].click();}
+});
+</script>
+</body>
+</html>
